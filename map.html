@@ -24,7 +24,7 @@
     <script src="https://d3js.org/d3.v5.min.js"></script>
     <script src="https://unpkg.com/topojson@3"></script>
     <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
 
 <body>
@@ -33,12 +33,12 @@
 <svg id="my_dataviz">
 </svg>
 
-<div id = "page1">
+<div id = "page1" style = "display:none">
     <div id = "slider">
     </div>
 </div>
-<div id = "page2" style = "display:none">
-    elements for page 2
+<div id = "page2" style = "display:block">
+
 </div>
 <div id = "page3" style = "display:none">
     elements for page 3
@@ -59,8 +59,9 @@
     var usmap = d3.json("https://unpkg.com/us-atlas@1/us/10m.json");
     var data = d3.csv("../data/time_series_covid19_confirmed_US.csv");
 
-    var width = 1000;
-    var height = 750;
+    var margin = {top:100, right:100, bottom:100, left:100},
+        width = 1080,
+        height = 800;
     var svg = d3.select("#my_dataviz").attr("width", width).attr("height", height)
 
     //map projection
@@ -79,9 +80,15 @@
 
     //update function for year
     var startDate = new Date("01/22/2020")
+    listDate = []
+    for (i=0; i<185; i++){
+        tmp = new Date(startDate.getTime() + i*864E5);
+        listDate[i] = (tmp.getMonth()+1).toString() + "/" + tmp.getDate().toString() + "/20"
+    }
+    console.log(listDate)
 
 Promise.all([usmap, data]).then(function (values) {
-    //read data and topojson file    
+//read data and topojson file    
     var map = values[0];
     var covid = values[1];
     var stateFeatures = topojson.feature(map, map.objects.states).features;
@@ -90,7 +97,6 @@ Promise.all([usmap, data]).then(function (values) {
     console.log(map)
     console.log(countyFeatures)
     console.log(covid)
-
 
 //settings for page 1************************************
     //slide bar location
@@ -108,21 +114,12 @@ Promise.all([usmap, data]).then(function (values) {
         }
         ); 
 
-
-
-
     function update(drawCircle) {
         svg.select("#circle-group").remove()
-
+        
         var slider_col = document.getElementById("date").value;
-        console.log(slider_col)
-        var newDate = new Date(startDate.getTime() + slider_col*864E5);
-        //console.log(newDate)
-        var curDate = (newDate.getMonth()+1).toString() + "/" + newDate.getDate().toString() + "/20"
-        //console.log(curDate)
+        var curDate = listDate[slider_col]
 
-        //console.log(covid[curDate])
-        //console.log(covid["7/22/20"])
         var circles = svg
             .append("g")
             .attr("id","circle-group")
@@ -197,24 +194,222 @@ Promise.all([usmap, data]).then(function (values) {
     
     }
 
-    drawPage1();
+    
 
 
 //************ Draw Page 2***************
-    covidByState = d3.nest()
-        .key(function (d) {return d.Province_State;})
-        //.rollup(function (v) {return d3.sum(v, function(d) {return d})})
-        .entries(covid)
-
-    console.log(covidByState)
-
-    function drawPage2() {
+    //data processing for page2
+    for (i=0; i<185; i++){
+        var value = listDate[i]
         
+        temp = d3.nest()
+        .key(function (d) {return d.Province_State;})
+        .rollup(function(v) {
+            return {
+                cases: d3.sum(v, function(d) {return d[value]}),
+                date: listDate[i],
+                //name: d.Province_State
+            }       
+        })
+        .entries(covid)
+        
+        temp2 = temp.map(function (d,i) {
+            return{
+                state: d.key,
+                value: [{date: d.value.date, cases: d.value.cases}]
+            }
+        })
+
+        if (i==0) {
+            var tmp2 = temp2
+        } else {
+            for (j=0; j<tmp2.length; j++){
+                tmp2[j].value.push(temp2[j].value[0])
+            }
+        }
     }
 
+    console.log(tmp2)
+
+    stateName = []
+    for (i=0; i<58; i++) {
+        stateName.push(tmp2[i].state)
+    }
+    console.log(stateName)
+
+    var myColor = d3.scalePoint().domain(stateName).range([0,1]);
+
+    var xPage2 = d3.scalePoint().domain(listDate).range([0, width-margin.left-margin.right])
+    var yPage2 = d3.scaleLinear().domain([0,500000]).range([height-margin.bottom-margin.top, 0])
+    //var yPage2 = d3.scaleLog().domain([1,500000]).range([height-margin.bottom-margin.top, 0])
+
+    var line = d3.line()
+        .x(function(d) {
+            return xPage2(d.date)})
+        .y(function(d) {return yPage2(d.cases)})
+
+
+    function drawPage2() {
+        //main part of line chart
+        svg.append("g")
+            .attr("transform", "translate("+margin.left+","+margin.top+")")
+            .selectAll("path")
+            .data(tmp2)//.slice(14,19))
+            .enter()
+            .append("path")
+            .attr("class", function(d) {return d.state+"-line"})
+            .attr("d", function(d) {
+                //console.log(line(d.value))
+                return line(d.value)
+                })
+            .attr("stroke", function(d) {return d3.interpolateRainbow(myColor(d.state))})
+            .style("fill", "none")
+            .style("stroke-width", 4)
+            .style("opacity", 0)
+        
+        //add x axis
+        svg.append("g")
+            .attr("transform", "translate("+margin.left+","+(height - margin.bottom)+")")
+            .call(d3.axisBottom(xPage2)
+                    .tickValues(["2/1/20","3/1/20","4/1/20","5/1/20","6/1/20","7/1/20"]))
+        //add y axis
+        svg.append("g")
+            .attr("transform", "translate("+margin.left+","+(margin.top)+")")
+            .call(d3.axisLeft(yPage2))
+
+
+        //circle and tool tip for mouseover
+        for (i=0; i<58; i++) {
+            var name = tmp2[i].state
+            svg.append("g")
+                .attr("transform", "translate("+margin.left+","+margin.top+")")
+                .selectAll("circle")
+                .data(tmp2[i].value)
+                .enter()
+                .append("circle")
+                .attr("class", tmp2[i].state+"-circle")
+                .attr("cx", function (d) {return xPage2(d.date)})
+                .attr("cy", function (d) {return yPage2(d.cases)})
+                .attr("r", 5)
+                .attr("fill", function(d) {return d3.interpolateRainbow(myColor(tmp2[i].state))})
+                .on("mouseover", function(d){
+                    //tooltip
+                    div.transition()        
+      	                .duration(200)      
+                        .style("opacity", .9);    
+                    p1.text("Confirmed Case: "+d.cases)
+                    div.style("left", (d3.event.pageX) + "px")     
+                        .style("top", (d3.event.pageY - 28) + "px");
+                //console.log(div)
+                })
+                .on("mouseout", function(d,i){
+                    div.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                })
+        }
+    
+    svg.selectAll("circle")
+        .style("opacity", 0)
+
+
+    // end of draw page 2   
+    }
+
+    var button = d3.select("#page2")
+        .append("div")
+        .attr("class", "btn-toolbar")
+        .attr("role","toolbar")
+    button.append("div")
+        .attr("class", "btn-group btn-group-sm")
+        .selectAll("button")
+        .data(tmp2.slice(0,15))
+        .enter()
+        .append("button")//.Puerto Rico-circle
+        .on("click", function(d) {
+            //console.log(d.state)
+            //console.log("."+d.state+"-circle")
+            var curOpacity = d3.selectAll("."+d.state+"-circle").style("opacity")
+            d3.selectAll("."+d.state+"-circle").transition().style("opacity", curOpacity == 1 ? 0:1)
+            d3.selectAll("."+d.state+"-line").transition().style("opacity", curOpacity == 1 ? 0:1)
+            if (curOpacity==0){
+                d3.select(this).attr("class", "btn btn-secondary active")
+            } else {
+                d3.select(this).attr("class", "btn btn-secondary")
+            }
+        })
+        .attr("type", "button")
+        .attr("class", "btn btn-secondary")
+        .attr("id", function(d){
+            return d.state
+        })
+        .text(function(d) {return d.state})
+    button.append("div")
+        .attr("class", "btn-group btn-group-sm")
+        .selectAll("button")
+        .data(tmp2.slice(15,34))
+        .enter()
+        .append("button")
+        .on("click", function(d) {
+            var curOpacity = d3.selectAll("."+d.state+"-circle").style("opacity")
+            d3.selectAll("."+d.state+"-circle").transition().style("opacity", curOpacity == 1 ? 0:1)
+            d3.selectAll("."+d.state+"-line").transition().style("opacity", curOpacity == 1 ? 0:1)
+            if (curOpacity==0){
+                d3.select(this).attr("class", "btn btn-secondary active")
+            } else {
+                d3.select(this).attr("class", "btn btn-secondary")
+            }
+        })
+        .attr("type", "button")
+        .attr("class", "btn btn-secondary")
+        .attr("id", function(d){return d.state})
+        .text(function(d) {return d.state})
+    button.append("div")
+        .attr("class", "btn-group btn-group-sm")
+        .selectAll("button")
+        .data(tmp2.slice(34,49))
+        .enter()
+        .append("button")
+        .on("click", function(d) {
+            var curOpacity = d3.selectAll("."+d.state+"-circle").style("opacity")
+            d3.selectAll("."+d.state+"-circle").transition().style("opacity", curOpacity == 1 ? 0:1)
+            d3.selectAll("."+d.state+"-line").transition().style("opacity", curOpacity == 1 ? 0:1)
+            if (curOpacity==0){
+                d3.select(this).attr("class", "btn btn-secondary active")
+            } else {
+                d3.select(this).attr("class", "btn btn-secondary")
+            }
+        })
+        .attr("type", "button")
+        .attr("class", "btn btn-secondary")
+        .attr("id", function(d){return d.state})
+        .text(function(d) {return d.state})
+    button.append("div")
+        .attr("class", "btn-group btn-group-sm")
+        .selectAll("button")
+        .data(tmp2.slice(49,58))
+        .enter()
+        .append("button")
+        .on("click", function(d) {
+            var curOpacity = d3.selectAll("."+d.state+"-circle").style("opacity")
+            d3.selectAll("."+d.state+"-circle").transition().style("opacity", curOpacity == 1 ? 0:1)
+            d3.selectAll("."+d.state+"-line").transition().style("opacity", curOpacity == 1 ? 0:1)
+            if (curOpacity==0){
+                d3.select(this).attr("class", "btn btn-secondary active")
+            } else {
+                d3.select(this).attr("class", "btn btn-secondary")
+            }
+        })
+        .attr("type", "button")
+        .attr("class", "btn btn-secondary")
+        .attr("id", function(d){return d.state})
+        .text(function(d) {return d.state})
+
+
+    drawPage2();
 //****************************************
     //scene change
-    var counter = 1
+    var counter = 2
 
     $("#backward").click(function (){
 		counter = counter - 1;
@@ -236,6 +431,7 @@ Promise.all([usmap, data]).then(function (values) {
                 break;
             case 2: 
                 y.style.display = "block";
+                drawPage2();
                 break;
             case 3: z.style.display = "block"
         }
@@ -243,6 +439,8 @@ Promise.all([usmap, data]).then(function (values) {
 		//update svg below
         console.log(counter)
 		});
+
+    
 
 	$("#forward").click(function (){
 		counter = counter + 1;
@@ -264,6 +462,7 @@ Promise.all([usmap, data]).then(function (values) {
                 break;
             case 2: 
                 y.style.display = "block";
+                drawPage2();
                 break;
             case 3: z.style.display = "block"
         }
