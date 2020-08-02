@@ -35,9 +35,9 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 </head>
 
-<body>
+<body style = "margin-left: 20px;">
 <!-- Create an element where the map will take place -->
-<div id="head1" style="display:block;">
+<div id="head1" style="display:block; ">
     <h1>COVID-19 Cases on the US Map</h1>
 </div>
 <div id="head2" style="display:none">
@@ -341,6 +341,32 @@ Promise.all([usmap, data]).then(function (values) {
 
     function drawCircle2(item, index) {
         //circle and tool tip for mouseover
+        var half = item.value.filter(function (d) {return d.cases<item.value[184].cases/2})
+        var halfitem = half[half.length-1]
+        console.log(half)
+        console.log(halfitem)
+        
+        svg2.append("g")
+            .attr("transform", "translate("+margin.left+","+margin.top+")")
+            .selectAll("circle")
+            .data([halfitem])
+            .enter()
+            .append("circle")
+            .attr("class", "state"+index+"-circle")
+            .attr("cx", function (d) {return xPage2(d.date)})
+            .attr("cy", function (d) {return yPage2(d.cases)})
+            .attr("r", 5)
+        svg2.append("g")
+            .attr("transform", "translate("+margin.left+","+margin.top+")")
+            .selectAll("Annotation")
+            .data([halfitem])
+            .enter()
+            .append("text")
+            .attr("class", "state"+index+"-circle")
+            .attr("x", function (d) {return (xPage2(d.date)-150)})
+            .attr("y", function (d) {return (yPage2(d.cases))})
+            .text(function (d) {return ("Half cases after "+d.date)})
+
         var name = item.state
         svg2.append("g")
             .attr("transform", "translate("+margin.left+","+margin.top+")")
@@ -373,6 +399,7 @@ Promise.all([usmap, data]).then(function (values) {
                     .style("opacity", 0);
             })
 
+        
     }
 
     var button = d3.select("#page2")
@@ -579,10 +606,10 @@ Promise.all([usmap, data]).then(function (values) {
 
 //****************************************
     //initialize
-    drawPage3();
+    drawPage2();
     
     //scene change
-    var counter = 3
+    var counter = 2
 
     $("#backward").click(function (){
 		counter = counter - 1;
