@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+    .states {
+        fill-opacity: 1;
+    }
+    /*Tooltip style*/
+    div.tooltip {   
+     	position: absolute;           
+    	text-align: center;           
+    	width: 150px;                  
+    	height: 40px;                 
+    	padding: 2px;             
+    	font: 11px sans-serif;        
+    	background:white;   
+    	border: 0px;      
+    	border-radius: 5px;           
+    	pointer-events: none;         
+    }
+    .center-screen {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        min-height: 100vh;
+}
+</style>
+<head>
+    <title>COVID-19 Cases in the US</title>
+    <!-- Load d3.v5.js -->
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+</head>
+
+<body style = "margin-left: 20px;">
+<!-- Create an element where the map will take place -->
+<div id="head1" style="display:block; ">
+    <h1>COVID-19 Cases on the US Map</h1>
+</div>
+<div id="head2" style="display:none">
+    <h1>COVID-19 Cases by Date and State</h1>
+</div>
+<div id="head3" style="display:none">
+    <h1>Top COVID-19 Cases by State and by County</h1>
+</div>
+
+<svg id="scene1" style="display:block">
+</svg>
+<svg id="scene2" style="display:none">
+</svg>
+<svg id="scene3" style="display:none">
+</svg>
+
+<div id = "page1" style = "display:block">
+    <div id="slider-date">Date: 7/24/20</div>
+    <div id = "slider"></div>
+</div>
+<div id = "page2" style = "display:none">
+
+</div>
+<div id = "page3" style = "display:none">
+</div>
+
+<div>
+    <div>
+        <button id = "backward" class="btn btn-outline-primary">Prev</button>
+        <button id = "forward" class="btn btn-outline-primary">Next</button>
+    </div>
+</div>
+
+<script src="../js/dv.js">
+</script>
+</body>
