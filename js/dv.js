@@ -31,7 +31,7 @@
         tmp = new Date(startDate.getTime() + i*864E5);
         listDate[i] = (tmp.getMonth()+1).toString() + "/" + tmp.getDate().toString() + "/20"
     }
-    console.log(listDate)
+    //console.log(listDate)
 
 Promise.all([usmap, data]).then(function (values) {
 //read data and topojson file    
@@ -39,10 +39,6 @@ Promise.all([usmap, data]).then(function (values) {
     var covid = values[1];
     var stateFeatures = topojson.feature(map, map.objects.states).features;
     var countyFeatures = topojson.feature(map, map.objects.counties).features;
-
-    console.log(map)
-    console.log(countyFeatures)
-    console.log(covid)
 
 //settings for page 1************************************
     //slide bar location
@@ -184,13 +180,13 @@ Promise.all([usmap, data]).then(function (values) {
         }
     }
 
-    console.log(tmp2)
+    //console.log(tmp2)
 
     stateName = []
     for (i=0; i<58; i++) {
         stateName.push(tmp2[i].state)
     }
-    console.log(stateName)
+    //console.log(stateName)
 
     var myColor = d3.scalePoint().domain(stateName).range([0,1]);
 
@@ -239,14 +235,8 @@ Promise.all([usmap, data]).then(function (values) {
         .append("g")
         .append("text")
         .attr("class", function(d,i) {return "state"+i+"-label"})
-        .datum(function(d) { 
-            console.log(d.state)
-            console.log(d.value[d.value.length - 1])
-            return {state: d.state, value: d.value[d.value.length - 1]}; })
-        .attr("transform", function(d) { 
-            console.log(xPage2(d.value.date))
-            console.log(yPage2(d.value.cases))
-            return "translate(" + xPage2(d.value.date) + "," + yPage2(d.value.cases) + ")"; })
+        .datum(function(d) {return {state: d.state, value: d.value[d.value.length - 1]}; })
+        .attr("transform", function(d) {return "translate(" + xPage2(d.value.date) + "," + yPage2(d.value.cases) + ")"; })
         .attr("x", 10) // shift the text a bit more right
         .text(function(d) { return d.state; })
         .style("fill", function(d) {return d3.interpolateRainbow(myColor(d.state))})
@@ -269,8 +259,6 @@ Promise.all([usmap, data]).then(function (values) {
         //circle and tool tip for mouseover
         var half = item.value.filter(function (d) {return d.cases<item.value[184].cases/2})
         var halfitem = half[half.length-1]
-        console.log(half)
-        console.log(halfitem)
         
         svg2.append("g")
             .attr("transform", "translate("+margin.left+","+margin.top+")")
@@ -315,7 +303,6 @@ Promise.all([usmap, data]).then(function (values) {
                 p1.text("Confirmed Case: "+d.cases)
                 div.style("left", (d3.event.pageX) + "px")     
                     .style("top", (d3.event.pageY - 28) + "px");
-            //console.log(div)
             })
             .on("mouseout", function(d,i){
                 var cur = this;
@@ -324,7 +311,6 @@ Promise.all([usmap, data]).then(function (values) {
                     .duration(500)
                     .style("opacity", 0);
             })
-
         
     }
 
@@ -417,15 +403,9 @@ Promise.all([usmap, data]).then(function (values) {
         data4 = data4.sort(function(a,b) {
             return -a.cases - -b.cases
         })
-        
-        console.log(data3)
-        console.log(data4)
 
         var topState = data3[0].cases
         var topCounty = data4[0].cases
-
-        console.log(topState)
-        console.log(topCounty)
 
         var xState = d3.scaleLinear().domain([0, topState]).range([0, width/2-margin.left*1.5])
         var xCounty = d3.scaleLinear().domain([0, topCounty]).range([0, width/2-margin.left*1.5])
@@ -532,10 +512,10 @@ Promise.all([usmap, data]).then(function (values) {
 
 //****************************************
     //initialize
-    drawPage2();
+    drawPage1();
     
     //scene change
-    var counter = 2
+    var counter = 1
 
     $("#backward").click(function (){
 		counter = counter - 1;
@@ -553,7 +533,7 @@ Promise.all([usmap, data]).then(function (values) {
             case 3:
                 drawPage3();
         }
-        console.log(counter)
+        //console.log(counter)
 	});
 
 	$("#forward").click(function (){
@@ -572,8 +552,6 @@ Promise.all([usmap, data]).then(function (values) {
             case 3:
                 drawPage3();
         }
-		//update svg below
-        console.log(counter)
 	});
 
 
