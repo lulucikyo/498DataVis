@@ -300,7 +300,8 @@ Promise.all([usmap, data]).then(function (values) {
                 div.transition()        
       	            .duration(200)      
                     .style("opacity", .9);    
-                p1.text("Confirmed Case: "+d.cases)
+                p1.text(d.date)
+                p2.text("Confirmed Case: "+d.cases)
                 div.style("left", (d3.event.pageX) + "px")     
                     .style("top", (d3.event.pageY - 28) + "px");
             })
@@ -430,7 +431,8 @@ Promise.all([usmap, data]).then(function (values) {
                 div.transition()        
       	            .duration(200)      
                     .style("opacity", .9);    
-                p1.text("Confirmed Case on "+curDate+": "+d.cases)
+                p1.text("Confirmed Case on "+curDate+": ")
+                p2.text(d.cases)
                 div.style("left", (d3.event.pageX) + "px")     
                     .style("top", (d3.event.pageY - 28) + "px");
             })
@@ -461,7 +463,8 @@ Promise.all([usmap, data]).then(function (values) {
                 div.transition()        
       	            .duration(200)      
                     .style("opacity", .9);    
-                p1.text("Confirmed Case on "+curDate+": "+d.cases)
+                p1.text("Confirmed Case on "+curDate+": ")
+                p2.text(d.cases)
                 div.style("left", (d3.event.pageX) + "px")     
                     .style("top", (d3.event.pageY - 28) + "px");
             })
